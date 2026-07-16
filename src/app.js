@@ -1,6 +1,7 @@
 // src/app.js
 import { AuthModule } from './modules/auth/index.js';
 import { CompanyModule } from './modules/company/index.js';
+import { ProductionModule } from './modules/production/index.js';
 import { Router } from './core/router.js';
 
 // Sélection des éléments de l'interface
@@ -13,28 +14,20 @@ const companyCashEl = document.getElementById('company-cash');
 
 Router.init();
 
-// Route du Tableau de bord (Dashboard)
+// Route : Dashboard
 Router.registerRoute('dashboard', async (container) => {
-    // On récupère les données fraîches de l'entreprise
     const response = await CompanyModule.getMyCompany();
-    
     if (response.success) {
         const { company, offlineData } = response;
-        
-        // Mise à jour de la topbar
         companyNameEl.textContent = company.name;
         companyCashEl.textContent = CompanyModule.formatMoney(company.cash);
 
-        // Construction du HTML du tableau de bord
-        let offlineHtml = '';
-        if (offlineData.secondsOffline > 60) {
-            offlineHtml = `
-                <div class="card" style="border-color: var(--success-color); margin-bottom: 1.5rem;">
-                    <h3 style="color: var(--success-color);">Rapport d'absence</h3>
-                    <p>Ton entreprise a tourné pendant ${offlineData.hoursOffline} heures pendant ton absence.</p>
-                </div>
-            `;
-        }
+        let offlineHtml = offlineData.secondsOffline > 60 
+            ? `<div class="card" style="border-color: var(--success-color); margin-bottom: 1.5rem;">
+                <h3 style="color: var(--success-color);">Rapport d'absence</h3>
+                <p>Ton entreprise a tourné pendant ${offlineData.hoursOffline} heures pendant ton absence.</p>
+               </div>` 
+            : '';
 
         container.innerHTML = `
             <h2 style="margin-bottom: 1.5rem;">Vue d'ensemble</h2>
@@ -42,35 +35,61 @@ Router.registerRoute('dashboard', async (container) => {
             <div class="dashboard-grid">
                 <div class="card">
                     <h3>Productions en cours</h3>
-                    <p style="color: var(--text-secondary);">Module à connecter...</p>
+                    <p style="color: var(--text-secondary);">Aucune usine active.</p>
                 </div>
                 <div class="card">
-                    <h3>Trésorerie Actuelle</h3>
+                    <h3>Trésorerie</h3>
                     <p style="font-size: 1.5rem; font-weight: bold; color: var(--success-color); margin-top: 0.5rem;">
                         ${CompanyModule.formatMoney(company.cash)}
                     </p>
                 </div>
             </div>
         `;
-    } else {
-        container.innerHTML = `<p style="color: var(--danger-color);">Impossible de charger l'entreprise.</p>`;
     }
 });
 
+// Route : Inventaire (Nouvelle)
+Router.registerRoute('inventory', async (container) => {
+    const items = await ProductionModule.getMyInventory();
+    
+    let itemsHtml = items && items.length > 0 
+        ? `
+            <table style="width: 100%; border-collapse: collapse; margin-top: 1rem;">
+                <thead>
+                    <tr style="color: var(--text-secondary); text-align: left; border-bottom: 1px solid var(--border-color);">
+                        <th style="padding: 1rem;">Objet</th>
+                        <th style="padding: 1rem;">Quantité</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${items.map(item => `
+                        <tr style="border-bottom: 1px solid var(--border-color);">
+                            <td style="padding: 1rem;">${item.items.name}</td>
+                            <td style="padding: 1rem; font-weight: bold;">${item.quantity}</td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+        `
+        : '<p style="color: var(--text-secondary); margin-top: 1rem;">Ton inventaire est vide.</p>';
+
+    container.innerHTML = `
+        <h2 style="margin-bottom: 1.5rem;">Inventaire</h2>
+        <div class="card">
+            <h3>Ressources en stock</h3>
+            ${itemsHtml}
+        </div>
+    `;
+});
 
 // --- 2. GESTION DE L'AUTHENTIFICATION ---
 
 AuthModule.onAuthStateChange(async (event, session) => {
     if (session) {
-        // L'utilisateur est connecté
         authScreen.classList.add('hidden');
         gameScreen.classList.remove('hidden');
-        
-        // On force la navigation vers le tableau de bord à la connexion
-        Router.currentView = null; // Reset pour forcer le rafraîchissement
         Router.navigate('dashboard');
     } else {
-        // L'utilisateur est déconnecté
         authScreen.classList.remove('hidden');
         gameScreen.classList.add('hidden');
         companyNameEl.textContent = 'Chargement...';
@@ -78,14 +97,12 @@ AuthModule.onAuthStateChange(async (event, session) => {
     }
 });
 
-// Événements des boutons de connexion / inscription
+// Événements boutons
 document.getElementById('btn-register').addEventListener('click', async () => {
     const email = document.getElementById('email').value;
     const pwd = document.getElementById('password').value;
     const usr = document.getElementById('username').value;
-    
-    if(!usr) return alert("Le pseudo est obligatoire pour créer une entreprise.");
-    
+    if(!usr) return alert("Pseudo obligatoire.");
     const result = await AuthModule.register(email, pwd, usr);
     if(!result.success) alert(result.error);
 });
