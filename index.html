@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Business Empire | Gestion Économique</title>
+    <link rel="stylesheet" href="src/styles/main.css">
+</head>
+<body>
+    <div class="app-container">
+        
+        <!-- ÉCRAN D'AUTHENTIFICATION -->
+        <div id="auth-screen">
+            <div class="auth-card">
+                <h1>Business Empire</h1>
+                <input type="text" id="username" placeholder="Pseudo (pour Inscription)">
+                <input type="email" id="email" placeholder="Adresse Email">
+                <input type="password" id="password" placeholder="Mot de passe">
+                <button id="btn-login">Se Connecter</button>
+                <button id="btn-register" class="secondary">Créer un compte</button>
+            </div>
+        </div>
+
+        <!-- ÉCRAN DE JEU PRINCIPAL -->
+        <div id="game-screen" class="hidden">
+            
+            <!-- Sidebar Navigation -->
+            <aside class="sidebar">
+                <div class="brand">Empire OS</div>
+                <nav class="nav-menu">
+                    <a class="nav-item active" data-target="dashboard">Tableau de bord</a>
+                    <a class="nav-item" data-target="facilities">Bâtiments & Production</a>
+                    <a class="nav-item" data-target="inventory">Inventaire</a>
+                    <a class="nav-item" data-target="market">Marché Global</a>
+                </nav>
+                <button id="btn-logout" class="secondary" style="margin-top: auto;">Déconnexion</button>
+            </aside>
+
+            <!-- Contenu Principal -->
+            <main class="main-content">
+                
+                <!-- Barre du haut (Statut de l'entreprise) -->
+                <header class="topbar">
+                    <div class="company-info">
+                        <h2 id="company-name">Chargement...</h2>
+                    </div>
+                    <div class="company-info">
+                        <span class="cash-display" id="company-cash">$0.00</span>
+                    </div>
+                </header>
+
+                <!-- Zone d'affichage dynamique des modules -->
+                <section id="view-container">
+                    
+                    <!-- Le tableau de bord par défaut -->
+                    <div id="view-dashboard">
+                        <h2 style="margin-bottom: 1.5rem;">Vue d'ensemble</h2>
+                        
+                        <div id="offline-report" class="card hidden" style="border-color: var(--success-color); margin-bottom: 1.5rem;">
+                            <!-- Injecté par JS -->
+                        </div>
+
+                        <div class="dashboard-grid">
+                            <div class="card">
+                                <h3>Productions en cours</h3>
+                                <p style="color: var(--text-secondary);">Aucune usine active.</p>
+                            </div>
+                            <div class="card">
+                                <h3>Ordres de marché</h3>
+                                <p style="color: var(--text-secondary);">Aucune vente en cours.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                </section>
+            </main>
+        </div>
+    </div>
+
+    <!-- Point d'entrée JavaScript -->
+    <script type="module" src="src/app.js"></script>
+</body>
+</html>
