@@ -11,7 +11,10 @@ export class ProductionModule {
                 id, name, status, started_at, ends_at, producing_quantity,
                 items ( name )
             `);
-        if (error) console.error("Erreur bâtiments:", error.message);
+        if (error) {
+            console.error("Erreur bâtiments:", error.message);
+            return null;
+        }
         return data;
     }
 
@@ -20,7 +23,10 @@ export class ProductionModule {
         const { data, error } = await supabase
             .from('inventory')
             .select('quantity, items(name)');
-        if (error) console.error("Erreur inventaire:", error.message);
+        if (error) {
+            console.error("Erreur inventaire:", error.message);
+            return null;
+        }
         return data;
     }
 
@@ -33,5 +39,27 @@ export class ProductionModule {
             return false;
         }
         return data; // Retourne true si succès, false si le temps n'était pas écoulé
+    }
+
+    // Lancer une nouvelle production
+    static async start(facilityId, itemId, quantity) {
+        // Validation basique côté client pour éviter une requête inutile
+        if (!quantity || quantity <= 0) {
+            console.error("La quantité doit être supérieure à 0");
+            return { success: false, error: "Quantité invalide" };
+        }
+
+        const { data, error } = await supabase.rpc('start_production', { 
+            target_facility_id: facilityId,
+            target_item_id: itemId,
+            qty: quantity
+        });
+        
+        if (error) {
+            console.error("Erreur de lancement de production:", error.message);
+            return { success: false, error: error.message };
+        }
+        
+        return { success: true, data };
     }
 }
